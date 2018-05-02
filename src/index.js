@@ -6,25 +6,16 @@ export default function concatMap(project) {
     let innerTalkback = null
     let sourceTalkback
 
-    const talkback = (type, data) => {
-      if (type === 0) return
-
-      sourceTalkback(type, data)
-
-      if (type === 2 && innerTalkback !== null) {
-        innerTalkback(type, data)
-      }
-    }
-
-    const innerCallbag = (type, data) => {
+    const innerSink = (type, data) => {
       if (type === 0) {
         innerTalkback = data
-        sink(0, talkback)
+        innerTalkback(1)
         return
       }
 
       if (type === 1) {
         sink(1, data)
+        innerTalkback(1)
         return
       }
 
@@ -35,13 +26,21 @@ export default function concatMap(project) {
           return
         }
 
-        project(queue.shift())(0, innerCallbag)
+        project(queue.shift())(0, innerSink)
       }
+    }
+
+    const wrappedSink = (type, data) => {
+      if (type === 2 && innerTalkback !== null) {
+        innerTalkback(2, data)
+      }
+      sourceTalkback(type, data)
     }
 
     source(0, (type, data) => {
       if (type === 0) {
         sourceTalkback = data
+        sink(0, wrappedSink)
         return
       }
 
@@ -51,7 +50,7 @@ export default function concatMap(project) {
           return
         }
 
-        project(data)(0, innerCallbag)
+        project(data)(0, innerSink)
         return
       }
 
