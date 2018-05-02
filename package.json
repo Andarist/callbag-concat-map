@@ -1,6 +1,6 @@
 {
   "name": "callbag-concat-map",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "👜 Callbag operator that maps to inner source, subscribe and emit in order.",
   "main": "dist/callbag-concat-map.js",
   "module": "dist/callbag-concat-map.es.js",
