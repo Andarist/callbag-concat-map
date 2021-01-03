@@ -3,8 +3,14 @@ import map from 'callbag-map'
 import pipe from 'callbag-pipe'
 import subject from 'callbag-subject'
 import take from 'callbag-take'
+import fromIter from 'callbag-from-iter'
+import interval from 'callbag-interval'
 
 import concatMap from '../src'
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 test('works', () => {
   const actual = []
@@ -68,4 +74,30 @@ test('works', () => {
         '3: 22',
       ])
     })
+})
+
+test('listenable: inner sources complete before the outer source', () => {
+  const actual = []
+  pipe(
+    fromIter([1, 2, 3]),
+    concatMap(v => pipe(interval(200), take(v))),
+    forEach(d => actual.push(d)),
+  )
+
+  return expect(
+    Promise.resolve(1500)
+      .then(sleep)
+      .then(() => actual),
+  ).resolves.toEqual([0, 0, 1, 0, 1, 2])
+})
+
+test('pullable: inner sources complete before the outer source', () => {
+  const actual = []
+  pipe(
+    fromIter([1, 2, 3]),
+    concatMap(v => fromIter(new Array(v).fill(null).map((_, i) => i))),
+    forEach(d => actual.push(d)),
+  )
+
+  expect(actual).toEqual([0, 0, 1, 0, 1, 2])
 })
