@@ -5,6 +5,7 @@ export default function concatMap(project) {
     const queue = []
     let innerTalkback = null
     let sourceTalkback
+    let outerSrcFinished = false
 
     const innerSink = (type, data) => {
       if (type === 0) {
@@ -19,10 +20,16 @@ export default function concatMap(project) {
         return
       }
 
+      if (type === 2 && data) {
+        sink(2, data)
+        return
+      }
+
       if (type === 2) {
         innerTalkback = null
 
-        if (queue.length === 0) {
+        if (queue.length === 0 && outerSrcFinished) {
+          sink(2)
           return
         }
 
@@ -55,11 +62,7 @@ export default function concatMap(project) {
       }
 
       if (type === 2) {
-        sink(2, data)
-
-        if (innerTalkback !== null) {
-          innerTalkback(2, data)
-        }
+        outerSrcFinished = true
       }
     })
   }
